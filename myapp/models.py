@@ -14,18 +14,20 @@ class Category(models.Model):
         unique_together = ['name']
 
 class Task(models.Model):
+    objects = None
     STATUS_CHOICES = [
         ('new', 'New'),
-        ('in progress', 'In progress', 'in_progress'),
+        ('In progress', 'in_progress'),
         ('pending', 'Pending'),
         ('blocked', 'Blocked'),
         ('done', 'Done'),
     ]
 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+
     title = models.CharField(max_length=255, unique_for_date='created_at')
     description = models.TextField()
     categories = models.ManyToManyField(Category, related_name='tasks')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -40,6 +42,7 @@ class Task(models.Model):
         unique_together = ['title']
 
 class SubTask(models.Model):
+    objects = None
     STATUS_CHOICES = [
         ('new', 'New'),
         ('in_progress', 'In progress'),
