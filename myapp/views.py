@@ -1,7 +1,12 @@
+from django.db.models import Count
 from django.http import HttpResponse, HttpRequest
-from rest_framework import generics
-from serializers.serializers import SubTaskCreateSerializer, SubTaskSerializer
-from .models import SubTask
+from django.utils import timezone
+from rest_framework import generics, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from serializers.serializers import SubTaskCreateSerializer, SubTaskSerializer, TaskSerializer
+from .models import SubTask, Task
 
 
 def greeting(request: HttpRequest):
@@ -10,11 +15,46 @@ def greeting(request: HttpRequest):
 def hello_user(request: HttpRequest):
     return HttpResponse("<h1>Hello, Vlad!</h1>")
 
+
+
+class TaskListCreateView(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+    ordering = ['created_at']
+
+class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+
 class SubTaskListCreateView(generics.ListCreateAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskCreateSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+    ordering = ['created_at']
 
-class SubTaskDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+
+class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
 
+class TaskStatsView(APIView):
+    def get(self, request, *args, **kwargs):
+        total_tasks = Task.objects.count()
+        status_counts = Task.objects.values('status').annotate(count=Count('status'))
+        overdue_tasks = Task.objects.filter(deadline__lt=timezone.now(), status__in=['pending', 'in_progress']).count()
+
+        stats = {
+            'total_tasks': total_tasks,
+            'status_counts': status_counts,
+            'overdue_tasks': overdue_tasks
+        }
+
+        return Response(stats)
