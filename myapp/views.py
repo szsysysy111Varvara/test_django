@@ -5,8 +5,10 @@ from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from serializers.serializers import SubTaskCreateSerializer, SubTaskSerializer, TaskSerializer
-from .models import SubTask, Task
+from serializers.serializers import SubTaskCreateSerializer, SubTaskSerializer, TaskSerializer, CategorySerializer
+from .models import SubTask, Task, Category
+from rest_framework import viewsets
+from rest_framework.decorators import action
 
 
 def greeting(request: HttpRequest):
@@ -58,3 +60,14 @@ class TaskStatsView(APIView):
         }
 
         return Response(stats)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @action(detail=True, methods=['get'])
+    def count_tasks(self, request, pk=None):
+        category = self.get_object()
+        task_count = category.tasks.count()
+        return Response({'task_count': task_count})

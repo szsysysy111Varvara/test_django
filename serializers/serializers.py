@@ -8,10 +8,10 @@ class SubTaskCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['created_at']
 
-class CategoryCreateSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['id', 'name']
 
     def create(self, validated_data):
         if Category.objects.filter(name=validated_data['name']).exists():

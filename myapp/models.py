@@ -32,6 +32,7 @@ class Task(models.Model):
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    category = models.ForeignKey(Category, related_name='tasks', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.title
