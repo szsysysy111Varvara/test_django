@@ -9,6 +9,7 @@ from serializers.serializers import SubTaskCreateSerializer, SubTaskSerializer, 
 from .models import SubTask, Task, Category
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 def greeting(request: HttpRequest):
@@ -28,9 +29,15 @@ class TaskListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['created_at']
     ordering = ['created_at']
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class SubTaskListCreateView(generics.ListCreateAPIView):
@@ -42,12 +49,19 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['created_at']
     ordering = ['created_at']
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
 
 class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
+    permission_classes = [IsAuthenticated]
 
 class TaskStatsView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         total_tasks = Task.objects.count()
         status_counts = Task.objects.values('status').annotate(count=Count('status'))
@@ -65,6 +79,11 @@ class TaskStatsView(APIView):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @action(detail=True, methods=['get'])
     def count_tasks(self, request, pk=None):
