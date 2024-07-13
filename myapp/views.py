@@ -10,6 +10,7 @@ from .models import SubTask, Task, Category
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from .permissions import IsOwner
 
 
 def greeting(request: HttpRequest):
@@ -34,10 +35,16 @@ class TaskListCreateView(generics.ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class SubTaskListCreateView(generics.ListCreateAPIView):
@@ -54,11 +61,17 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 class TaskStatsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -90,3 +103,15 @@ class CategoryViewSet(viewsets.ModelViewSet):
         category = self.get_object()
         task_count = category.tasks.count()
         return Response({'task_count': task_count})
+
+class UserTaskListView(generics.ListAPIView):
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        return Task.objects.filter(owner=self.request.user)
+
+class UserSubTaskListView(generics.ListAPIView):
+    serializer_class = SubTaskSerializer
+
+    def get_queryset(self):
+        return SubTask.objects.filter(owner=self.request.user)

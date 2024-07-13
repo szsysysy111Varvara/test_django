@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Category(models.Model):
@@ -33,6 +34,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, related_name='tasks', on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -60,6 +62,7 @@ class SubTask(models.Model):
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey(User, related_name='subtasks', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
